@@ -28,6 +28,7 @@ export async function toTicketDtos(
     priority: t.priority,
     assignee: t.assigneeId ? ref(t.assigneeId) : null,
     createdBy: ref(t.createdById),
+    firstResponseAt: t.firstResponseAt ?? null,
     slaDueAt: t.slaDueAt,
     overdueAt: t.overdueAt,
     createdAt: t.createdAt,

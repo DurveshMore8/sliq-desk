@@ -1,7 +1,8 @@
 import type { RequestHandler } from "express";
-import { Types, isValidObjectId } from "mongoose";
+import { Types } from "mongoose";
 import { z } from "zod";
 import { AppError } from "../lib/errors.js";
+import { findTicket } from "../lib/find-ticket.js";
 import { EVENTS, emitToOrganization } from "../lib/realtime.js";
 import { sendSuccess } from "../lib/response.js";
 import { toTicketDto, toTicketDtos } from "../lib/ticket-dto.js";
@@ -43,13 +44,6 @@ const updateSchema = z
   .refine((b) => b.status !== undefined || b.priority !== undefined || b.assigneeId !== undefined, {
     message: "Provide at least one of status, priority or assigneeId",
   });
-
-async function findTicket(id: unknown, organizationId: Types.ObjectId) {
-  if (typeof id !== "string" || !isValidObjectId(id)) throw new AppError(404, "Ticket not found");
-  const ticket = await Ticket.findOne({ _id: id, organizationId });
-  if (!ticket) throw new AppError(404, "Ticket not found");
-  return ticket;
-}
 
 export const createTicket: RequestHandler = async (req, res) => {
   const actor = req.auth!.user;

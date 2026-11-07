@@ -34,6 +34,7 @@ export interface Ticket {
   priority: TicketPriority;
   assignee: UserRef | null;
   createdBy: UserRef;
+  firstResponseAt: string | null;
   slaDueAt: string | null;
   overdueAt: string | null;
   createdAt: string;
@@ -51,4 +52,12 @@ export interface Assignee {
   id: string;
   name: string;
   role: Role;
+}
+
+export interface TicketComment {
+  id: string;
+  ticketId: string;
+  body: string;
+  author: { id: string; name: string; role: Role | null };
+  createdAt: string;
 }

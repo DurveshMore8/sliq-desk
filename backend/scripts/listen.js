@@ -29,8 +29,11 @@ socket.on("connect_error", (err) => console.log(`[${email}] rejected: ${err.mess
 socket.on("disconnect", (reason) => console.log(`[${email}] disconnected: ${reason}`));
 socket.onAny((event, payload) => {
   const t = payload?.ticket;
-  console.log(
-    `[${email}] ${event}`,
-    t ? `"${t.title}" status=${t.status} priority=${t.priority}` : "",
-  );
+  const c = payload?.comment;
+  const detail = t
+    ? `"${t.title}" status=${t.status} priority=${t.priority}`
+    : c
+      ? `by ${c.author.name}: "${c.body}"`
+      : "";
+  console.log(`[${email}] ${event}`, detail);
 });

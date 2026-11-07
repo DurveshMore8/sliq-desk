@@ -1,12 +1,13 @@
 import { useEffect, useRef } from "react";
 import { io } from "socket.io-client";
-import type { Ticket } from "../types";
+import type { Ticket, TicketComment } from "../types";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
 
 export type RealtimeEvent =
   | { type: "ticket.created"; ticket: Ticket }
   | { type: "ticket.updated"; ticket: Ticket }
+  | { type: "comment.created"; comment: TicketComment }
   | { type: "tickets.refresh" };
 
 export function useRealtime(
@@ -34,6 +35,9 @@ export function useRealtime(
     );
     socket.on("ticket.updated", (p: { ticket: Ticket }) =>
       eventRef.current({ type: "ticket.updated", ticket: p.ticket }),
+    );
+    socket.on("comment.created", (p: { comment: TicketComment }) =>
+      eventRef.current({ type: "comment.created", comment: p.comment }),
     );
     socket.on("tickets.refresh", () =>
       eventRef.current({ type: "tickets.refresh" }),

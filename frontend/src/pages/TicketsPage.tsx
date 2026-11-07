@@ -67,7 +67,9 @@ export default function TicketsPage() {
       .catch(() => setStaff([]));
   }, []);
 
-  useRealtime(refresh, refresh);
+  useRealtime((event) => {
+    if (event.type !== "comment.created") refresh();
+  }, refresh);
 
   if (!user) return null;
 

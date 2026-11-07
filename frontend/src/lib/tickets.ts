@@ -72,3 +72,9 @@ export function getTicketControls(user: User, ticket: Ticket): TicketControls {
     assignee: user.role === "agent" ? "self" : "any",
   };
 }
+
+export function canComment(user: User, ticket: Ticket): boolean {
+  if (user.role === "viewer" || ticket.status === "closed") return false;
+  if (user.role === "employee") return ticket.createdBy.id === user.id;
+  return true;
+}

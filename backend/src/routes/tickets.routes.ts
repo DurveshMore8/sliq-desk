@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { createComment, listComments } from "../controllers/comments.controller.js";
 import {
   createTicket,
   getTicket,
@@ -17,5 +18,7 @@ router.get("/", listTickets);
 router.post("/", createTicket);
 router.get("/:id", getTicket);
 router.patch("/:id", updateTicket);
+router.get("/:id/comments", listComments);
+router.post("/:id/comments", createComment);
 
 export default router;

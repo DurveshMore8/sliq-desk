@@ -1,4 +1,9 @@
-import type { Role, TicketPriority, TicketStatus } from "../models/constants.js";
+import {
+  STAFF_ROLES,
+  type Role,
+  type TicketPriority,
+  type TicketStatus,
+} from "../models/constants.js";
 
 export const STATUS_TRANSITIONS: Record<TicketStatus, readonly TicketStatus[]> = {
   open: ["in_progress", "resolved", "closed"],
@@ -88,5 +93,21 @@ export function checkTicketUpdate(
     return deny(409, `A ticket cannot move from ${ticket.status} to ${nextStatus}`);
   }
 
+  return allow;
+}
+
+export function isStaff(role: Role): boolean {
+  return STAFF_ROLES.includes(role);
+}
+
+export function checkComment(
+  actor: RuleActor,
+  ticket: Pick<RuleTicket, "status" | "createdById">,
+): RuleResult {
+  if (actor.role === "viewer") return deny(403, "Viewers cannot add comments");
+  if (actor.role === "employee" && ticket.createdById !== actor.id) {
+    return deny(403, "Employees can only comment on their own tickets");
+  }
+  if (ticket.status === "closed") return deny(409, "Closed tickets cannot be commented on");
   return allow;
 }

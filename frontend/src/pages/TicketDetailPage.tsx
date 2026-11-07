@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { useAuth } from "../auth/useAuth";
+import CommentThread from "../components/CommentThread";
 import { PriorityBadge, StatusBadge } from "../components/TicketBadges";
 import { api, toApiError } from "../lib/api";
 import { formatDate } from "../lib/format";
@@ -14,6 +15,7 @@ import { useRealtime } from "../lib/useRealtime";
 import type {
   Assignee,
   Ticket,
+  TicketComment,
   TicketPriority,
   TicketStatus,
   UserRef,
@@ -25,16 +27,26 @@ interface Changes {
   assigneeId?: string | null;
 }
 
+// The author's own post and the socket event both deliver the same comment
+function appendComment(
+  list: TicketComment[],
+  comment: TicketComment,
+): TicketComment[] {
+  return list.some((c) => c.id === comment.id) ? list : [...list, comment];
+}
+
 export default function TicketDetailPage() {
   const { id } = useParams();
   const { user } = useAuth();
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [staff, setStaff] = useState<Assignee[]>([]);
+  const [comments, setComments] = useState<TicketComment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [commentsLoading, setCommentsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [commentsError, setCommentsError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-
   const [refreshKey, setRefreshKey] = useState(0);
   const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
 
@@ -58,6 +70,25 @@ export default function TicketDetailPage() {
   }, [id, refreshKey]);
 
   useEffect(() => {
+    let cancelled = false;
+    api<{ comments: TicketComment[] }>(`/tickets/${id}/comments`)
+      .then((data) => {
+        if (cancelled) return;
+        setComments(data.comments);
+        setCommentsError(null);
+      })
+      .catch((err) => {
+        if (!cancelled) setCommentsError(toApiError(err).message);
+      })
+      .finally(() => {
+        if (!cancelled) setCommentsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id, refreshKey]);
+
+  useEffect(() => {
     api<{ assignees: Assignee[] }>("/tickets/assignees")
       .then((data) => setStaff(data.assignees))
       .catch(() => setStaff([]));
@@ -66,6 +97,9 @@ export default function TicketDetailPage() {
   useRealtime((event) => {
     if (event.type === "ticket.updated" && event.ticket.id === id)
       setTicket(event.ticket);
+    if (event.type === "comment.created" && event.comment.ticketId === id) {
+      setComments((prev) => appendComment(prev, event.comment));
+    }
     if (event.type === "tickets.refresh") refresh();
   }, refresh);
 
@@ -205,6 +239,14 @@ export default function TicketDetailPage() {
           </div>
         </div>
       </section>
+
+      <CommentThread
+        ticket={ticket}
+        comments={comments}
+        loading={commentsLoading}
+        error={commentsError}
+        onAdded={(c) => setComments((prev) => appendComment(prev, c))}
+      />
     </>
   );
 }

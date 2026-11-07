@@ -14,6 +14,7 @@ export interface ITicket {
   priority: TicketPriority;
   assigneeId: Types.ObjectId | null;
   createdById: Types.ObjectId;
+  firstResponseAt: Date | null;
   slaDueAt: Date | null;
   overdueAt: Date | null;
   createdAt: Date;
@@ -29,6 +30,7 @@ const ticketSchema = new Schema<ITicket>(
     priority: { type: String, enum: [...TICKET_PRIORITIES], default: "medium" },
     assigneeId: { type: Schema.Types.ObjectId, ref: "User", default: null },
     createdById: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    firstResponseAt: { type: Date, default: null },
     slaDueAt: { type: Date, default: null },
     overdueAt: { type: Date, default: null },
   },
