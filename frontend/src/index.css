@@ -594,3 +594,51 @@ h2 {
 .comment-form {
   margin-top: 1rem;
 }
+
+/* SLA alerts */
+.alerts {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 360px;
+}
+
+.alert-toast {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  border: 1px solid #f3c1c1;
+  border-left: 4px solid var(--danger);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(20, 30, 60, 0.15);
+}
+
+.alert-toast strong {
+  color: var(--danger);
+}
+
+.alert-toast p {
+  margin: 0.15rem 0 0;
+  font-size: 0.9rem;
+}
+
+.toast-close {
+  padding: 0 0.25rem;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.toast-close:hover {
+  color: var(--text);
+}

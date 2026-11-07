@@ -35,6 +35,7 @@ export interface Ticket {
   assignee: UserRef | null;
   createdBy: UserRef;
   firstResponseAt: string | null;
+  overdue: boolean;
   slaDueAt: string | null;
   overdueAt: string | null;
   createdAt: string;

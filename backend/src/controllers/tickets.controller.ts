@@ -1,10 +1,12 @@
 import type { RequestHandler } from "express";
 import { Types } from "mongoose";
 import { z } from "zod";
+import { config } from "../config.js";
 import { AppError } from "../lib/errors.js";
 import { findTicket } from "../lib/find-ticket.js";
 import { EVENTS, emitToOrganization } from "../lib/realtime.js";
 import { sendSuccess } from "../lib/response.js";
+import { nextSlaDueAt } from "../lib/sla.js";
 import { toTicketDto, toTicketDtos } from "../lib/ticket-dto.js";
 import { canCreateTicket, checkTicketUpdate } from "../lib/ticket-rules.js";
 import {
@@ -50,10 +52,22 @@ export const createTicket: RequestHandler = async (req, res) => {
   if (!canCreateTicket(actor.role)) throw new AppError(403, "Viewers cannot create tickets");
 
   const body = createSchema.parse(req.body);
+  const slaDueAt = nextSlaDueAt(
+    {
+      priority: body.priority,
+      status: "open",
+      firstResponseAt: null,
+      overdueAt: null,
+      slaDueAt: null,
+    },
+    new Date(),
+    config.slaMinutes,
+  );
   const ticket = await Ticket.create({
     ...body,
     organizationId: actor.organizationId,
     createdById: actor._id,
+    slaDueAt,
   });
   const dto = await toTicketDto(ticket);
   emitToOrganization(actor.organizationId, EVENTS.ticketCreated, { ticket: dto });
@@ -119,7 +133,7 @@ export const updateTicket: RequestHandler = async (req, res) => {
   );
   if (!result.allowed) throw new AppError(result.status, result.message);
 
-  const update: Partial<Pick<ITicket, "status" | "priority" | "assigneeId">> = {};
+  const update: Partial<Pick<ITicket, "status" | "priority" | "assigneeId" | "slaDueAt">> = {};
   if (changes.status !== undefined && changes.status !== ticket.status) {
     update.status = changes.status;
   }
@@ -140,6 +154,19 @@ export const updateTicket: RequestHandler = async (req, res) => {
       update.assigneeId = new Types.ObjectId(changes.assigneeId);
     }
   }
+
+  const nextDue = nextSlaDueAt(
+    {
+      priority: update.priority ?? ticket.priority,
+      status: update.status ?? ticket.status,
+      firstResponseAt: ticket.firstResponseAt,
+      overdueAt: ticket.overdueAt,
+      slaDueAt: ticket.slaDueAt,
+    },
+    new Date(),
+    config.slaMinutes,
+  );
+  if (nextDue?.getTime() !== ticket.slaDueAt?.getTime()) update.slaDueAt = nextDue;
 
   if (Object.keys(update).length === 0) {
     sendSuccess(res, "No changes", { ticket: await toTicketDto(ticket) });

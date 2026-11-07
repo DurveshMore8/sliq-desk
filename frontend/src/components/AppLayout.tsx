@@ -1,13 +1,15 @@
 import { Link, NavLink, Outlet } from "react-router";
 import { useAuth } from "../auth/useAuth";
 import { ROLE_LABELS, canManageMembers } from "../lib/roles";
+import { RealtimeProvider } from "../realtime/RealtimeProvider";
+import OverdueAlerts from "./OverdueAlerts";
 
 export default function AppLayout() {
   const { user, logout } = useAuth();
   if (!user) return null;
 
   return (
-    <>
+    <RealtimeProvider>
       <header className="topbar">
         <div className="topbar-left">
           <strong>SliqDesk</strong>
@@ -32,6 +34,7 @@ export default function AppLayout() {
       <main className="container">
         <Outlet />
       </main>
-    </>
+      <OverdueAlerts />
+    </RealtimeProvider>
   );
 }

@@ -9,3 +9,6 @@ export const TICKET_PRIORITIES = ["low", "medium", "high", "urgent"] as const;
 export type TicketPriority = (typeof TICKET_PRIORITIES)[number];
 
 export const STAFF_ROLES: readonly Role[] = ["superadmin", "admin", "agent"];
+
+export const SLA_PRIORITIES: readonly TicketPriority[] = ["high", "urgent"];
+export const SLA_STATUSES: readonly TicketStatus[] = ["open", "in_progress"];

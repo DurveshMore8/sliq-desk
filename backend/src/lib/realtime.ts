@@ -23,6 +23,7 @@ export const EVENTS = {
   ticketUpdated: "ticket.updated",
   ticketsRefresh: "tickets.refresh",
   commentCreated: "comment.created",
+  slaOverdue: "sla.overdue",
 } as const;
 
 let io: Server | null = null;

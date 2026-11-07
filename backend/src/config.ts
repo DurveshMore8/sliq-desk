@@ -19,4 +19,6 @@ export const config = {
     user: process.env.SMTP_USER ?? "",
     pass: process.env.SMTP_PASS ?? "",
   },
+  slaMinutes: Math.max(0.1, num(process.env.SLA_MINUTES, 2)),
+  slaCheckIntervalSeconds: Math.max(1, num(process.env.SLA_CHECK_INTERVAL_SECONDS, 10)),
 };

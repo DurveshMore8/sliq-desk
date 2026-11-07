@@ -1,6 +1,7 @@
 import type { HydratedDocument, Types } from "mongoose";
 import { User } from "../models/index.js";
 import type { ITicket } from "../models/ticket.js";
+import { isOverdue } from "./sla.js";
 
 export async function toTicketDtos(
   tickets: HydratedDocument<ITicket>[],
@@ -29,6 +30,7 @@ export async function toTicketDtos(
     assignee: t.assigneeId ? ref(t.assigneeId) : null,
     createdBy: ref(t.createdById),
     firstResponseAt: t.firstResponseAt ?? null,
+    overdue: isOverdue(t),
     slaDueAt: t.slaDueAt,
     overdueAt: t.overdueAt,
     createdAt: t.createdAt,

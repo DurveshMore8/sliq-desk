@@ -3,6 +3,7 @@ import app from "./app.js";
 import { config } from "./config.js";
 import { connectDatabase } from "./db.js";
 import { initRealtime } from "./lib/realtime.js";
+import { startSlaChecker } from "./lib/sla-checker.js";
 
 async function main(): Promise<void> {
   await connectDatabase();
@@ -14,6 +15,8 @@ async function main(): Promise<void> {
   httpServer.listen(config.port, "0.0.0.0", () => {
     console.log(`Backend listening on port ${config.port}`);
   });
+
+  startSlaChecker();
 }
 
 main().catch((err) => {

@@ -41,5 +41,6 @@ ticketSchema.index({ organizationId: 1, createdAt: -1 });
 ticketSchema.index({ organizationId: 1, status: 1, createdAt: -1 });
 ticketSchema.index({ organizationId: 1, priority: 1, createdAt: -1 });
 ticketSchema.index({ organizationId: 1, assigneeId: 1, createdAt: -1 });
+ticketSchema.index({ slaDueAt: 1 });
 
 export const Ticket = model<ITicket>("Ticket", ticketSchema);

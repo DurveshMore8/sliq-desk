@@ -168,7 +168,7 @@ export default function TicketDetailPage() {
           <div className="detail-badges">
             <StatusBadge status={ticket.status} />
             <PriorityBadge priority={ticket.priority} />
-            {ticket.overdueAt && (
+            {ticket.overdue && (
               <span className="pill pill-overdue">Overdue</span>
             )}
           </div>

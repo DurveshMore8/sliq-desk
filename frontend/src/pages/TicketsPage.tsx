@@ -68,7 +68,13 @@ export default function TicketsPage() {
   }, []);
 
   useRealtime((event) => {
-    if (event.type !== "comment.created") refresh();
+    if (
+      event.type === "ticket.created" ||
+      event.type === "ticket.updated" ||
+      event.type === "tickets.refresh"
+    ) {
+      refresh();
+    }
   }, refresh);
 
   if (!user) return null;
@@ -194,7 +200,7 @@ export default function TicketsPage() {
                       <Link to={`/tickets/${t.id}`} className="ticket-link">
                         {t.title}
                       </Link>
-                      {t.overdueAt && (
+                      {t.overdue && (
                         <span className="pill pill-overdue">Overdue</span>
                       )}
                     </td>
