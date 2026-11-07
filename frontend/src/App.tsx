@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
 
-type Health = { status: string; timestamp: string };
+type ApiResponse<T> = { success: boolean; message: string; data: T };
+type Health = { status: string; database: string; timestamp: string };
 
 export default function App() {
   const [health, setHealth] = useState<Health | null>(null);
@@ -10,9 +11,11 @@ export default function App() {
 
   useEffect(() => {
     fetch(`${API_URL}/health`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json() as Promise<Health>;
+      .then(async (res) => {
+        const body = (await res.json()) as ApiResponse<Health>;
+        if (!res.ok || !body.success)
+          throw new Error(body.message ?? `HTTP ${res.status}`);
+        return body.data;
       })
       .then(setHealth)
       .catch((err: Error) => setError(err.message));

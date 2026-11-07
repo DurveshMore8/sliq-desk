@@ -1,6 +1,6 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import app from "./app.js";
 
 describe("GET /health", () => {
@@ -24,8 +24,9 @@ describe("GET /health", () => {
 
   it("returns status ok", async () => {
     const res = await fetch(`${baseUrl}/health`);
-    const body = (await res.json()) as { status: string };
+    const body = (await res.json()) as { success: boolean; data: { status: string } };
     expect(res.status).toBe(200);
-    expect(body.status).toBe("ok");
+    expect(body.success).toBe(true);
+    expect(body.data.status).toBe("ok");
   });
 });

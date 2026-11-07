@@ -11,7 +11,11 @@ it("shows the backend status when the API responds", async () => {
     "fetch",
     vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ status: "ok", timestamp: "now" }),
+      json: async () => ({
+        success: true,
+        message: "OK",
+        data: { status: "ok", database: "connected", timestamp: "now" },
+      }),
     }),
   );
 

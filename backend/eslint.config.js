@@ -11,4 +11,9 @@ export default defineConfig([
     extends: [js.configs.recommended, tseslint.configs.recommended, prettier],
     languageOptions: { globals: globals.node },
   },
+  {
+    rules: {
+      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+    },
+  },
 ]);
