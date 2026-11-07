@@ -18,7 +18,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "seed": "tsx --env-file-if-exists=.env src/seed/cli.ts",
+    "seed:reset": "tsx --env-file-if-exists=.env src/seed/cli.ts --reset"
   },
   "keywords": [],
   "author": "",

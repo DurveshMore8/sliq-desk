@@ -21,4 +21,5 @@ export const config = {
   },
   slaMinutes: Math.max(0.1, num(process.env.SLA_MINUTES, 2)),
   slaCheckIntervalSeconds: Math.max(1, num(process.env.SLA_CHECK_INTERVAL_SECONDS, 10)),
+  seedOnStart: process.env.SEED_ON_START !== "false",
 };

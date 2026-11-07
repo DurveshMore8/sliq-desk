@@ -4,10 +4,13 @@ import { config } from "./config.js";
 import { connectDatabase } from "./db.js";
 import { initRealtime } from "./lib/realtime.js";
 import { startSlaChecker } from "./lib/sla-checker.js";
+import { seedDatabase } from "./seed/seed.js";
 
 async function main(): Promise<void> {
   await connectDatabase();
   console.log("Connected to MongoDB");
+
+  if (config.seedOnStart) await seedDatabase();
 
   const httpServer = createServer(app);
   initRealtime(httpServer);

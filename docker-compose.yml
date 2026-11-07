@@ -32,6 +32,7 @@ services:
       MAIL_FROM: ${MAIL_FROM:-Sliqdesk <no-reply@sliqdesk.local>}
       SLA_MINUTES: ${SLA_MINUTES:-2}
       SLA_CHECK_INTERVAL_SECONDS: ${SLA_CHECK_INTERVAL_SECONDS:-10}
+      SEED_ON_START: ${SEED_ON_START:-true}
     volumes:
       - ./backend:/app
       - /app/node_modules
