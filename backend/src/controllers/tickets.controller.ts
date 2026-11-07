@@ -2,6 +2,7 @@ import type { RequestHandler } from "express";
 import { Types, isValidObjectId } from "mongoose";
 import { z } from "zod";
 import { AppError } from "../lib/errors.js";
+import { EVENTS, emitToOrganization } from "../lib/realtime.js";
 import { sendSuccess } from "../lib/response.js";
 import { toTicketDto, toTicketDtos } from "../lib/ticket-dto.js";
 import { canCreateTicket, checkTicketUpdate } from "../lib/ticket-rules.js";
@@ -60,7 +61,9 @@ export const createTicket: RequestHandler = async (req, res) => {
     organizationId: actor.organizationId,
     createdById: actor._id,
   });
-  sendSuccess(res, "Ticket created", { ticket: await toTicketDto(ticket) }, 201);
+  const dto = await toTicketDto(ticket);
+  emitToOrganization(actor.organizationId, EVENTS.ticketCreated, { ticket: dto });
+  sendSuccess(res, "Ticket created", { ticket: dto }, 201);
 };
 
 export const listTickets: RequestHandler = async (req, res) => {
@@ -163,7 +166,9 @@ export const updateTicket: RequestHandler = async (req, res) => {
     throw new AppError(409, "This ticket was changed by someone else. Refresh and try again.");
   }
 
-  sendSuccess(res, "Ticket updated", { ticket: await toTicketDto(updated) });
+  const dto = await toTicketDto(updated);
+  emitToOrganization(actor.organizationId, EVENTS.ticketUpdated, { ticket: dto });
+  sendSuccess(res, "Ticket updated", { ticket: dto });
 };
 
 export const listAssignees: RequestHandler = async (req, res) => {

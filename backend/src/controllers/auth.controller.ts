@@ -3,6 +3,7 @@ import { z } from "zod";
 import { config } from "../config.js";
 import { AppError, isDuplicateKeyError } from "../lib/errors.js";
 import { hashPassword, verifyPassword } from "../lib/password.js";
+import { disconnectSession, disconnectUserExceptSession } from "../lib/realtime.js";
 import { sendSuccess } from "../lib/response.js";
 import { clearSessionCookie, hashToken, startSession } from "../lib/session.js";
 import { Organization, Session, User } from "../models/index.js";
@@ -85,6 +86,7 @@ export const logout: RequestHandler = async (req, res) => {
   const token: unknown = req.cookies?.[config.cookieName];
   if (typeof token === "string" && token !== "") {
     await Session.deleteOne({ tokenHash: hashToken(token) });
+    disconnectSession(hashToken(token));
   }
   clearSessionCookie(res);
   sendSuccess(res, "Logged out");
@@ -115,6 +117,7 @@ export const changePassword: RequestHandler = async (req, res) => {
   const token: unknown = req.cookies?.[config.cookieName];
   const currentHash = typeof token === "string" ? hashToken(token) : "";
   await Session.deleteMany({ userId: user._id, tokenHash: { $ne: currentHash } });
+  disconnectUserExceptSession(user._id, currentHash);
 
   const org = await Organization.findById(user.organizationId).orFail();
   sendSuccess(res, "Password changed", { user: toUserDto(user, org) });

@@ -5,6 +5,7 @@ import { AppError, isDuplicateKeyError } from "../lib/errors.js";
 import { sendTemporaryPasswordEmail } from "../lib/mailer.js";
 import { generateTemporaryPassword, hashPassword } from "../lib/password.js";
 import { canManage } from "../lib/permissions.js";
+import { EVENTS, disconnectUser, emitToOrganization } from "../lib/realtime.js";
 import { sendSuccess } from "../lib/response.js";
 import { ASSIGNABLE_ROLES } from "../models/constants.js";
 import { Organization, Session, Ticket, User } from "../models/index.js";
@@ -125,10 +126,14 @@ export const removeMember: RequestHandler = async (req, res) => {
 
   await User.deleteOne({ _id: member._id });
   await Session.deleteMany({ userId: member._id });
-  await Ticket.updateMany(
+  const unassigned = await Ticket.updateMany(
     { organizationId: actor.organizationId, assigneeId: member._id, status: { $ne: "closed" } },
     { $set: { assigneeId: null } },
   );
+  disconnectUser(member._id);
+  if (unassigned.modifiedCount > 0) {
+    emitToOrganization(actor.organizationId, EVENTS.ticketsRefresh);
+  }
   sendSuccess(res, "Member removed");
 };
 
@@ -148,6 +153,7 @@ export const resendPassword: RequestHandler = async (req, res) => {
   member.mustChangePassword = true;
   await member.save();
   await Session.deleteMany({ userId: member._id });
+  disconnectUser(member._id);
 
   const emailSent = await emailTemporaryPassword(member, actor.organizationId, temporaryPassword);
   sendSuccess(

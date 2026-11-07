@@ -2,7 +2,7 @@ import type { Response } from "express";
 import type { Types } from "mongoose";
 import { createHash, randomBytes } from "node:crypto";
 import { config } from "../config.js";
-import { Session } from "../models/index.js";
+import { Session, User } from "../models/index.js";
 
 export function generateToken(): string {
   return randomBytes(32).toString("base64url");
@@ -27,4 +27,15 @@ export async function startSession(res: Response, userId: Types.ObjectId): Promi
 
 export function clearSessionCookie(res: Response): void {
   res.clearCookie(config.cookieName, { path: "/" });
+}
+
+export async function findSessionUser(token: unknown) {
+  if (typeof token !== "string" || token === "") return null;
+  const session = await Session.findOne({
+    tokenHash: hashToken(token),
+    expiresAt: { $gt: new Date() },
+  });
+  if (!session) return null;
+  const user = await User.findById(session.userId);
+  return user ? { session, user } : null;
 }
