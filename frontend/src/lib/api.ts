@@ -70,3 +70,9 @@ export function fieldError(
 ): string | undefined {
   return error?.errors.find((e) => e.path === path)?.message;
 }
+
+export function toApiError(err: unknown): ApiError {
+  return err instanceof ApiError
+    ? err
+    : new ApiError("Something went wrong", 0);
+}

@@ -43,6 +43,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(null);
         }
       },
+      changePassword: async (currentPassword, newPassword) => {
+        const data = await api<{ user: User }>("/auth/change-password", {
+          method: "POST",
+          body: { currentPassword, newPassword },
+        });
+        setUser(data.user);
+      },
     }),
     [user, loading],
   );
