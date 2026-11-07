@@ -21,11 +21,15 @@ const loginSchema = z.object({
   password: z.string().min(1).max(128),
 });
 
-// Compared against when the email is unknown, so response time doesn't reveal which emails exist
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1).max(128),
+  newPassword: z.string().min(8).max(128),
+});
+
 const dummyHash = hashPassword("not-a-real-password");
 
 function toUserDto(
-  user: { _id: unknown; name: string; email: string; role: string },
+  user: { _id: unknown; name: string; email: string; role: string; mustChangePassword: boolean },
   org: { _id: unknown; name: string },
 ) {
   return {
@@ -33,11 +37,11 @@ function toUserDto(
     name: user.name,
     email: user.email,
     role: user.role,
+    mustChangePassword: user.mustChangePassword,
     organization: { id: String(org._id), name: org.name },
   };
 }
 
-// Creates a new organization with the signing-up user as its superadmin
 export const signup: RequestHandler = async (req, res) => {
   const { name, email, organizationName, password } = signupSchema.parse(req.body);
 
@@ -45,7 +49,6 @@ export const signup: RequestHandler = async (req, res) => {
 
   const passwordHash = await hashPassword(password);
 
-  // Two writes without a transaction: remove the organization if creating the user fails
   const org = await Organization.create({ name: organizationName });
   let user;
   try {
@@ -78,7 +81,6 @@ export const login: RequestHandler = async (req, res) => {
   sendSuccess(res, "Logged in", { user: toUserDto(user, org) });
 };
 
-// Idempotent: works (and clears the cookie) even if the session is already gone
 export const logout: RequestHandler = async (req, res) => {
   const token: unknown = req.cookies?.[config.cookieName];
   if (typeof token === "string" && token !== "") {
@@ -92,4 +94,28 @@ export const me: RequestHandler = async (req, res) => {
   const user = req.auth!.user;
   const org = await Organization.findById(user.organizationId).orFail();
   sendSuccess(res, "Current user", { user: toUserDto(user, org) });
+};
+
+export const changePassword: RequestHandler = async (req, res) => {
+  const { currentPassword, newPassword } = changePasswordSchema.parse(req.body);
+  const actor = req.auth!.user;
+
+  const user = await User.findById(actor._id).select("+passwordHash").orFail();
+  if (!(await verifyPassword(currentPassword, user.passwordHash))) {
+    throw new AppError(400, "Current password is incorrect");
+  }
+  if (currentPassword === newPassword) {
+    throw new AppError(400, "New password must be different from the current one");
+  }
+
+  user.passwordHash = await hashPassword(newPassword);
+  user.mustChangePassword = false;
+  await user.save();
+
+  const token: unknown = req.cookies?.[config.cookieName];
+  const currentHash = typeof token === "string" ? hashToken(token) : "";
+  await Session.deleteMany({ userId: user._id, tokenHash: { $ne: currentHash } });
+
+  const org = await Organization.findById(user.organizationId).orFail();
+  sendSuccess(res, "Password changed", { user: toUserDto(user, org) });
 };

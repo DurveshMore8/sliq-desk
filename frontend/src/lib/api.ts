@@ -35,7 +35,7 @@ export async function api<T>(
   try {
     res = await fetch(`${API_URL}${path}`, {
       method: options.method ?? "GET",
-      credentials: "include", // sends the session cookie
+      credentials: "include",
       headers:
         options.body !== undefined
           ? { "Content-Type": "application/json" }

@@ -11,7 +11,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Ask the server who we are; a 401 simply means nobody is logged in
   useEffect(() => {
     api<{ user: User }>("/auth/me")
       .then((data) => setUser(data.user))

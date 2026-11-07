@@ -2,6 +2,7 @@ export class AppError extends Error {
   constructor(
     public readonly status: number,
     message: string,
+    public readonly data: Record<string, unknown> = {},
   ) {
     super(message);
   }

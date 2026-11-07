@@ -1,6 +1,7 @@
-import { randomBytes, scrypt, timingSafeEqual } from "node:crypto";
+import { randomBytes, randomInt, scrypt, timingSafeEqual } from "node:crypto";
 
 const KEY_LENGTH = 64;
+const TEMP_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
 
 function derive(password: string, salt: Buffer, length: number): Promise<Buffer> {
   return new Promise((resolve, reject) => {
@@ -8,7 +9,6 @@ function derive(password: string, salt: Buffer, length: number): Promise<Buffer>
   });
 }
 
-// Stored format: scrypt$<salt base64>$<key base64>
 export async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(16);
   const key = await derive(password, salt, KEY_LENGTH);
@@ -21,4 +21,10 @@ export async function verifyPassword(password: string, stored: string): Promise<
   const expected = Buffer.from(keyB64, "base64");
   const actual = await derive(password, Buffer.from(saltB64, "base64"), expected.length);
   return timingSafeEqual(actual, expected);
+}
+
+export function generateTemporaryPassword(length = 12): string {
+  let out = "";
+  for (let i = 0; i < length; i++) out += TEMP_ALPHABET[randomInt(TEMP_ALPHABET.length)];
+  return out;
 }

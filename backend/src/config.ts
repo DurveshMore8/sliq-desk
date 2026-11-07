@@ -10,4 +10,13 @@ export const config = {
   isProduction: process.env.NODE_ENV === "production",
   cookieName: "sid",
   sessionDays: 7,
+  appUrl: process.env.APP_URL ?? "http://localhost:3000",
+  mailFrom: process.env.MAIL_FROM ?? "SliqDesk <no-reply@sliqdesk.local>",
+  smtp: {
+    host: process.env.SMTP_HOST ?? "localhost",
+    port: num(process.env.SMTP_PORT, 1025),
+    secure: process.env.SMTP_SECURE === "true",
+    user: process.env.SMTP_USER ?? "",
+    pass: process.env.SMTP_PASS ?? "",
+  },
 };

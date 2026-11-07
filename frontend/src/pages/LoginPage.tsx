@@ -18,7 +18,6 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       await login(email, password);
-      // On success the route guard redirects to the home page
     } catch (err) {
       setError(
         err instanceof ApiError ? err : new ApiError("Something went wrong", 0),

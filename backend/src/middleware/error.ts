@@ -21,7 +21,7 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     return;
   }
   if (err instanceof AppError) {
-    sendError(res, err.status, err.message);
+    sendError(res, err.status, err.message, err.data);
     return;
   }
   if (isBodyParseError(err)) {

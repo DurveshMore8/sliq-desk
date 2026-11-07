@@ -12,7 +12,6 @@ export function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
 
-// Creates a session and sets the httpOnly cookie
 export async function startSession(res: Response, userId: Types.ObjectId): Promise<void> {
   const token = generateToken();
   const expiresAt = new Date(Date.now() + config.sessionDays * 24 * 60 * 60 * 1000);

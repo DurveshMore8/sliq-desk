@@ -29,7 +29,6 @@ export default function RegisterPage() {
     setSubmitting(true);
     try {
       await signup({ name, email, organizationName, password });
-      // On success the route guard redirects to the home page
     } catch (err) {
       setError(
         err instanceof ApiError ? err : new ApiError("Something went wrong", 0),

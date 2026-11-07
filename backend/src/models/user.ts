@@ -9,6 +9,7 @@ export interface IUser {
   role: Role;
   createdAt: Date;
   updatedAt: Date;
+  mustChangePassword: boolean;
 }
 
 const userSchema = new Schema<IUser>(
@@ -18,14 +19,13 @@ const userSchema = new Schema<IUser>(
     name: { type: String, required: true, trim: true },
     passwordHash: { type: String, required: true, select: false },
     role: { type: String, enum: [...ROLES], required: true },
+    mustChangePassword: { type: Boolean, default: false },
   },
   { timestamps: true },
 );
 
-// Member listing
 userSchema.index({ organizationId: 1, role: 1 });
 
-// At most one superadmin per organization, enforced by the database
 userSchema.index(
   { organizationId: 1 },
   { unique: true, partialFilterExpression: { role: "superadmin" } },
