@@ -7,7 +7,7 @@ import { generateTemporaryPassword, hashPassword } from "../lib/password.js";
 import { canManage } from "../lib/permissions.js";
 import { sendSuccess } from "../lib/response.js";
 import { ASSIGNABLE_ROLES } from "../models/constants.js";
-import { Organization, Session, User } from "../models/index.js";
+import { Organization, Session, Ticket, User } from "../models/index.js";
 import type { IUser } from "../models/user.js";
 
 const emailSchema = z.string().trim().toLowerCase().pipe(z.email());
@@ -125,6 +125,10 @@ export const removeMember: RequestHandler = async (req, res) => {
 
   await User.deleteOne({ _id: member._id });
   await Session.deleteMany({ userId: member._id });
+  await Ticket.updateMany(
+    { organizationId: actor.organizationId, assigneeId: member._id, status: { $ne: "closed" } },
+    { $set: { assigneeId: null } },
+  );
   sendSuccess(res, "Member removed");
 };
 
