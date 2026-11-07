@@ -6,7 +6,7 @@ const num = (value: string | undefined, fallback: number): number => {
 export const config = {
   port: num(process.env.PORT, 4000),
   corsOrigin: process.env.CORS_ORIGIN ?? "http://localhost:3000",
-  mongoUrl: process.env.MONGO_URL ?? "mongodb://localhost:27017/helpdesk",
+  mongoUrl: process.env.MONGO_URL ?? "mongodb://localhost:27017/sliqdesk",
   isProduction: process.env.NODE_ENV === "production",
   cookieName: "sid",
   sessionDays: 7,
