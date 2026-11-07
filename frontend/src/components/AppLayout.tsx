@@ -13,7 +13,7 @@ export default function AppLayout() {
           <strong>SliqDesk</strong>
           <nav className="nav">
             <NavLink to="/" end>
-              Home
+              Tickets
             </NavLink>
             {canManageMembers(user.role) && (
               <NavLink to="/members">Members</NavLink>

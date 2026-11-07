@@ -6,10 +6,12 @@ import {
   PublicOnlyRoute,
 } from "./components/RouteGuards";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
-import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import MembersPage from "./pages/MembersPage";
+import NewTicketPage from "./pages/NewTicketPage";
 import RegisterPage from "./pages/RegisterPage";
+import TicketDetailPage from "./pages/TicketDetailPage";
+import TicketsPage from "./pages/TicketsPage";
 
 export default function App() {
   return (
@@ -21,7 +23,9 @@ export default function App() {
       <Route element={<ProtectedRoute />}>
         <Route path="/change-password" element={<ChangePasswordPage />} />
         <Route element={<AppLayout />}>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<TicketsPage />} />
+          <Route path="/tickets/new" element={<NewTicketPage />} />
+          <Route path="/tickets/:id" element={<TicketDetailPage />} />
           <Route element={<AdminRoute />}>
             <Route path="/members" element={<MembersPage />} />
           </Route>

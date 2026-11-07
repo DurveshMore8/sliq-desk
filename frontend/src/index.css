@@ -402,3 +402,161 @@ h2 {
   border: none;
   cursor: pointer;
 }
+
+/* Page header and forms */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.btn-link {
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.narrow {
+  max-width: 640px;
+}
+
+.field textarea {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  font: inherit;
+  color: inherit;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  resize: vertical;
+}
+
+.field textarea:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+  border-color: var(--primary);
+}
+
+.field textarea[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+/* Ticket list */
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0 1rem;
+  align-items: end;
+}
+
+.ticket-link {
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.ticket-link:hover {
+  text-decoration: underline;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1rem;
+}
+
+.pagination .muted {
+  margin: 0;
+}
+
+/* Status and priority pills */
+.pill {
+  display: inline-block;
+  padding: 0.1rem 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.pill-status-open {
+  color: #1d4ed8;
+  background: #e0e9ff;
+}
+
+.pill-status-in_progress {
+  color: #8a5300;
+  background: #fff1d6;
+}
+
+.pill-status-resolved {
+  color: #1b5e20;
+  background: #e0f3e2;
+}
+
+.pill-status-closed {
+  color: #4b5563;
+  background: #e9ecf1;
+}
+
+.pill-priority-low {
+  color: #4b5563;
+  background: #e9ecf1;
+}
+
+.pill-priority-medium {
+  color: #1d4ed8;
+  background: #e0e9ff;
+}
+
+.pill-priority-high {
+  color: #b26a00;
+  background: #ffe9c7;
+}
+
+.pill-priority-urgent {
+  color: #b71c1c;
+  background: #fde0e0;
+}
+
+.pill-overdue {
+  margin-left: 0.5rem;
+  color: #fff;
+  background: var(--danger);
+}
+
+/* Ticket detail */
+.detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.detail-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.description {
+  margin: 1rem 0;
+  white-space: pre-wrap;
+}
+
+.small {
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.manage-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0 1rem;
+  margin-top: 1rem;
+}
+
+.field select:disabled {
+  cursor: not-allowed;
+  background: var(--bg);
+}
