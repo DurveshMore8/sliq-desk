@@ -1,0 +1,1724 @@
+{
+  "info": {
+    "name": "SliqDesk API",
+    "description": "Requests for every endpoint of the SliqDesk API.\n\n1. Start the stack with `docker compose up` (the API is at http://localhost:4000).\n2. Open Auth > Log in (seeded users) and send one request. Postman stores the session cookie.\n3. Use the other folders. Requests save ids they need (ticketId, memberId, ...) as collection variables.\n4. To act as another user, send a different login request.\n\nThe folders `Permission checks` and `Isolation check` contain tests: run them with the Collection Runner.\nEvery response uses the envelope { success, message, data }, which a collection-level test checks on each request.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Public. Reports the API and database status."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Sign up (new organization)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/signup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "signup"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Owner\",\n  \"email\": \"owner+{{$timestamp}}@example.test\",\n  \"organizationName\": \"Test Org {{$timestamp}}\",\n  \"password\": \"Password123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Public. Creates an organization and its superadmin, then logs in. The timestamp keeps the email unique, so you can run it repeatedly."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.test(\"Logged in as superadmin\", function () { pm.expect(pm.response.json().data.user.role).to.eql(\"superadmin\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Log in (seeded users)",
+          "item": [
+            {
+              "name": "Log in as Acme superadmin (owner)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"superadmin@acme.test\",\n  \"password\": \"{{seedPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Seeded demo account. Replaces the session cookie, so every request after this one runs as Acme superadmin (owner)."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", function () { pm.response.to.have.status(200); });",
+                      "pm.test(\"Logged in as superadmin\", function () { pm.expect(pm.response.json().data.user.role).to.eql(\"superadmin\"); });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Log in as Acme admin",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"admin@acme.test\",\n  \"password\": \"{{seedPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Seeded demo account. Replaces the session cookie, so every request after this one runs as Acme admin."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", function () { pm.response.to.have.status(200); });",
+                      "pm.test(\"Logged in as admin\", function () { pm.expect(pm.response.json().data.user.role).to.eql(\"admin\"); });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Log in as Acme agent",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"agent@acme.test\",\n  \"password\": \"{{seedPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Seeded demo account. Replaces the session cookie, so every request after this one runs as Acme agent."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", function () { pm.response.to.have.status(200); });",
+                      "pm.test(\"Logged in as agent\", function () { pm.expect(pm.response.json().data.user.role).to.eql(\"agent\"); });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Log in as Acme employee",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"employee@acme.test\",\n  \"password\": \"{{seedPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Seeded demo account. Replaces the session cookie, so every request after this one runs as Acme employee."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", function () { pm.response.to.have.status(200); });",
+                      "pm.test(\"Logged in as employee\", function () { pm.expect(pm.response.json().data.user.role).to.eql(\"employee\"); });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Log in as Acme viewer",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"viewer@acme.test\",\n  \"password\": \"{{seedPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Seeded demo account. Replaces the session cookie, so every request after this one runs as Acme viewer."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", function () { pm.response.to.have.status(200); });",
+                      "pm.test(\"Logged in as viewer\", function () { pm.expect(pm.response.json().data.user.role).to.eql(\"viewer\"); });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Log in as Globex superadmin (owner)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"superadmin@globex.test\",\n  \"password\": \"{{seedPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Seeded demo account. Replaces the session cookie, so every request after this one runs as Globex superadmin (owner)."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", function () { pm.response.to.have.status(200); });",
+                      "pm.test(\"Logged in as superadmin\", function () { pm.expect(pm.response.json().data.user.role).to.eql(\"superadmin\"); });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Log in as Globex admin",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"admin@globex.test\",\n  \"password\": \"{{seedPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Seeded demo account. Replaces the session cookie, so every request after this one runs as Globex admin."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", function () { pm.response.to.have.status(200); });",
+                      "pm.test(\"Logged in as admin\", function () { pm.expect(pm.response.json().data.user.role).to.eql(\"admin\"); });"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "description": "One request per demo account. Postman keeps the session cookie, so run one of these first and the rest of the collection runs as that user. Running another login switches user."
+        },
+        {
+          "name": "Current user",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Any logged-in user, including one who still has a temporary password. Returns 401 when logged out."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Log out",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Ends the session and clears the cookie. Safe to call when already logged out."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Change password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/change-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "change-password"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"your-current-or-temporary-password\",\n  \"newPassword\": \"a-new-password-123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Any logged-in user. Do NOT run this as a seeded demo user unless you intend to change the documented password (run `npm run seed:reset` to restore it). Use it with a member you added, after logging in with their emailed temporary password."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Members",
+      "item": [
+        {
+          "name": "List members",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/members",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "members"
+              ]
+            },
+            "description": "Superadmin and admin only. Saves the id of the first agent, employee or viewer as `memberId` for the requests below."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", function () { pm.response.to.have.status(200); });",
+                  "const members = pm.response.json().data.members;",
+                  "const target = members.find(function (m) { return [\"agent\", \"employee\", \"viewer\"].indexOf(m.role) !== -1; });",
+                  "if (target) { pm.collectionVariables.set(\"memberId\", target.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Add member",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/members",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "members"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New Member\",\n  \"email\": \"new.member+{{$timestamp}}@example.test\",\n  \"role\": \"agent\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Superadmin and admin only. Roles: admin, agent, employee, viewer. A temporary password is emailed (read it in Mailpit at http://localhost:8025). The response never contains it. Saves the new member as `memberId`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", function () { pm.response.to.have.status(201); });",
+                  "if (pm.response.code === 201) { pm.collectionVariables.set(\"memberId\", pm.response.json().data.member.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Change member role",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/members/{{memberId}}/role",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "members",
+                "{{memberId}}",
+                "role"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"viewer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Superadmin and admin only. You cannot change your own role or the owner's."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Resend temporary password",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/members/{{memberId}}/resend-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "members",
+                "{{memberId}}",
+                "resend-password"
+              ]
+            },
+            "description": "Superadmin and admin only. Issues a new temporary password, signs the member out everywhere and emails it."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Remove member",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/members/{{memberId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "members",
+                "{{memberId}}"
+              ]
+            },
+            "description": "Superadmin and admin only. Removes the member, ends their sessions and unassigns their open tickets. Run `List members` again to pick another one."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Tickets",
+      "item": [
+        {
+          "name": "List tickets",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tickets?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number, starting at 1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Page size, 1 to 50"
+                },
+                {
+                  "key": "status",
+                  "value": "open",
+                  "description": "open | in_progress | resolved | closed",
+                  "disabled": true
+                },
+                {
+                  "key": "priority",
+                  "value": "high",
+                  "description": "low | medium | high | urgent",
+                  "disabled": true
+                },
+                {
+                  "key": "assigneeId",
+                  "value": "me",
+                  "description": "a user id, `me` or `unassigned`",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Any logged-in user. Newest first. Enable the optional filters as needed. Saves the first ticket as `ticketId`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", function () { pm.response.to.have.status(200); });",
+                  "const data = pm.response.json().data;",
+                  "pm.test(\"Has pagination\", function () { pm.expect(data.pagination).to.have.property(\"totalPages\"); });",
+                  "if (data.tickets.length > 0) { pm.collectionVariables.set(\"ticketId\", data.tickets[0].id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List assignees",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tickets/assignees",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "assignees"
+              ]
+            },
+            "description": "Any logged-in user. Staff members (superadmin, admin, agent) who can be assigned tickets. Saves an agent as `assigneeId`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", function () { pm.response.to.have.status(200); });",
+                  "const list = pm.response.json().data.assignees;",
+                  "const pick = list.find(function (a) { return a.role === \"agent\"; }) || list[0];",
+                  "if (pick) { pm.collectionVariables.set(\"assigneeId\", pick.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create ticket",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Cannot print from the shared drive\",\n  \"description\": \"Printing fails with an access error since this morning.\",\n  \"priority\": \"high\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Superadmin, admin, agent and employee. Not viewers. `priority` is optional (low, medium, high, urgent; default medium). A high or urgent ticket starts an SLA clock. Saves the new ticket as `ticketId`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", function () { pm.response.to.have.status(201); });",
+                  "if (pm.response.code === 201) { pm.collectionVariables.set(\"ticketId\", pm.response.json().data.ticket.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get ticket",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tickets/{{ticketId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "{{ticketId}}"
+              ]
+            },
+            "description": "Any logged-in user, for tickets of their own organization. Other organizations' tickets return 404."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets/{{ticketId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "{{ticketId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"in_progress\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Subject to role rules and valid transitions: open to in_progress, resolved or closed; in_progress to open or resolved; resolved to open, in_progress or closed; closed is final (409)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update priority",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets/{{ticketId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "{{ticketId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"priority\": \"urgent\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Admins on any ticket; agents on tickets assigned to them or unassigned."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Assign ticket",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets/{{ticketId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "{{ticketId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assigneeId\": \"{{assigneeId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Admins can assign any staff member. Agents can only claim an unassigned ticket for themselves. Run `List assignees` first to fill `assigneeId`."
+          }
+        },
+        {
+          "name": "Unassign ticket",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets/{{ticketId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "{{ticketId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assigneeId\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Admins on any ticket; agents only on their own tickets."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Comments",
+      "item": [
+        {
+          "name": "List comments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tickets/{{ticketId}}/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "{{ticketId}}",
+                "comments"
+              ]
+            },
+            "description": "Any logged-in user, oldest first."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Add comment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets/{{ticketId}}/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "{{ticketId}}",
+                "comments"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"I am looking into this now.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Staff on any open ticket; employees on their own tickets; not viewers; not on closed tickets. A first reply from staff stops the ticket's SLA clock."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", function () { pm.response.to.have.status(201); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Permission checks",
+      "item": [
+        {
+          "name": "Log in as Acme viewer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"viewer@acme.test\",\n  \"password\": \"{{seedPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Seeded demo account. Replaces the session cookie, so every request after this one runs as Acme viewer."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Logged in as viewer\", function () { pm.expect(pm.response.json().data.user.role).to.eql(\"viewer\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Save a ticket id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tickets?limit=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "1",
+                  "description": ""
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", function () { pm.response.to.have.status(200); });",
+                  "const t = pm.response.json().data.tickets[0];",
+                  "if (t) { pm.collectionVariables.set(\"ticketId\", t.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Viewer cannot create a ticket",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Should be refused\",\n  \"description\": \"Viewers are read-only\",\n  \"priority\": \"low\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 403\", function () { pm.response.to.have.status(403); });",
+                  "pm.test(\"success is false\", function () { pm.expect(pm.response.json().success).to.eql(false); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Viewer cannot comment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets/{{ticketId}}/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "{{ticketId}}",
+                "comments"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Should be refused\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 403\", function () { pm.response.to.have.status(403); });",
+                  "pm.test(\"success is false\", function () { pm.expect(pm.response.json().success).to.eql(false); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Viewer cannot update a ticket",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets/{{ticketId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "{{ticketId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"priority\": \"low\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 403\", function () { pm.response.to.have.status(403); });",
+                  "pm.test(\"success is false\", function () { pm.expect(pm.response.json().success).to.eql(false); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Log in as Acme agent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"agent@acme.test\",\n  \"password\": \"{{seedPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Seeded demo account. Replaces the session cookie, so every request after this one runs as Acme agent."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Logged in as agent\", function () { pm.expect(pm.response.json().data.user.role).to.eql(\"agent\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Agent cannot list members",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/members",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "members"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 403\", function () { pm.response.to.have.status(403); });",
+                  "pm.test(\"success is false\", function () { pm.expect(pm.response.json().success).to.eql(false); });"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Run this folder with the Collection Runner (right-click the folder, then Run). Every test should pass. It checks that the server refuses actions the role is not allowed to do."
+    },
+    {
+      "name": "Isolation check",
+      "item": [
+        {
+          "name": "Log in as Acme admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@acme.test\",\n  \"password\": \"{{seedPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Seeded demo account. Replaces the session cookie, so every request after this one runs as Acme admin."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Logged in as admin\", function () { pm.expect(pm.response.json().data.user.role).to.eql(\"admin\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Save an Acme ticket id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tickets?limit=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "1",
+                  "description": ""
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", function () { pm.response.to.have.status(200); });",
+                  "const t = pm.response.json().data.tickets[0];",
+                  "pm.test(\"Acme has a ticket\", function () { pm.expect(t).to.be.an(\"object\"); });",
+                  "if (t) { pm.collectionVariables.set(\"acmeTicketId\", t.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Log in as Globex admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@globex.test\",\n  \"password\": \"{{seedPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Seeded demo account. Replaces the session cookie, so every request after this one runs as Globex admin."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Logged in as admin\", function () { pm.expect(pm.response.json().data.user.role).to.eql(\"admin\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Globex list does not contain Acme tickets",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tickets?limit=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50",
+                  "description": ""
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", function () { pm.response.to.have.status(200); });",
+                  "const ids = pm.response.json().data.tickets.map(function (t) { return t.id; });",
+                  "pm.test(\"The Acme ticket is not listed\", function () { pm.expect(ids).to.not.include(pm.collectionVariables.get(\"acmeTicketId\")); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Globex cannot read an Acme ticket",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tickets/{{acmeTicketId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "{{acmeTicketId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 404\", function () { pm.response.to.have.status(404); });",
+                  "pm.test(\"success is false\", function () { pm.expect(pm.response.json().success).to.eql(false); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Globex cannot change an Acme ticket",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets/{{acmeTicketId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "{{acmeTicketId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"priority\": \"low\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 404\", function () { pm.response.to.have.status(404); });",
+                  "pm.test(\"success is false\", function () { pm.expect(pm.response.json().success).to.eql(false); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Globex cannot read Acme comments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tickets/{{acmeTicketId}}/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "{{acmeTicketId}}",
+                "comments"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 404\", function () { pm.response.to.have.status(404); });",
+                  "pm.test(\"success is false\", function () { pm.expect(pm.response.json().success).to.eql(false); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Globex cannot comment on an Acme ticket",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets/{{acmeTicketId}}/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "{{acmeTicketId}}",
+                "comments"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Should be refused\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 404\", function () { pm.response.to.have.status(404); });",
+                  "pm.test(\"success is false\", function () { pm.expect(pm.response.json().success).to.eql(false); });"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Run this folder with the Collection Runner (right-click the folder, then Run). It proves that a member of one organization cannot see or change another organization's data: every cross-organization request returns 404. Needs the seeded demo data."
+    }
+  ],
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.test(\"Response uses the { success, message, data } envelope\", function () {",
+          "    const json = pm.response.json();",
+          "    pm.expect(json).to.have.property(\"success\");",
+          "    pm.expect(json).to.have.property(\"message\");",
+          "    pm.expect(json).to.have.property(\"data\");",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000",
+      "type": "string"
+    },
+    {
+      "key": "seedPassword",
+      "value": "Password123!",
+      "type": "string"
+    },
+    {
+      "key": "ticketId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "memberId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "assigneeId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "acmeTicketId",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
