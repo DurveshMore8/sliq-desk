@@ -6,7 +6,7 @@ COPY package*.json ./
 FROM base AS dev
 RUN npm ci
 COPY . .
-CMD ["npm", "run", "dev"]
+CMD ["node_modules/.bin/tsx", "watch", "src/index.ts"]
 
 # Compile TypeScript
 FROM base AS build

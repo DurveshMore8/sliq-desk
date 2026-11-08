@@ -1,3 +1,5 @@
+name: sliqdesk
+
 services:
   mongo:
     image: mongo:8
@@ -22,14 +24,17 @@ services:
     ports:
       - "${BACKEND_PORT:-4000}:4000"
     environment:
-      NODE_ENV: ${NODE_ENV:-development}
+      NODE_ENV: development
       PORT: 4000
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
       APP_URL: ${APP_URL:-http://localhost:3000}
-      MONGO_URL: mongodb://mongo:27017/${MONGO_DB:-sliqdesk}
-      SMTP_HOST: mailpit
-      SMTP_PORT: 1025
-      MAIL_FROM: ${MAIL_FROM:-Sliqdesk <no-reply@sliqdesk.local>}
+      MONGO_URL: ${DOCKER_MONGO_URL:-mongodb://mongo:27017/sliqdesk}
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      MAIL_FROM: "${MAIL_FROM:-SliqDesk <no-reply@sliqdesk.local>}"
       SLA_MINUTES: ${SLA_MINUTES:-2}
       SLA_CHECK_INTERVAL_SECONDS: ${SLA_CHECK_INTERVAL_SECONDS:-10}
       SEED_ON_START: ${SEED_ON_START:-true}
@@ -41,6 +46,16 @@ services:
         condition: service_healthy
       mailpit:
         condition: service_started
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:4000/health').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
 
   frontend:
     build:
@@ -53,7 +68,8 @@ services:
       - ./frontend:/app
       - /app/node_modules
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
 volumes:
   mongodata:
